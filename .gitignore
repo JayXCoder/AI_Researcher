@@ -1,0 +1,66 @@
+# Local config and secrets
+.env
+.env.local
+.env.*.local
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+tfplan
+*.tfplan
+*.pem
+*.key
+
+# GCP service account keys in repo root (e.g. myproject-abc123def456.json)
+/*-*-*.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+.eggs/
+*.egg-info/
+*.egg
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# Flutter / Dart
+frontend/.dart_tool/
+frontend/build/
+frontend/.packages
+frontend/pubspec.lock
+*.iml
+
+# IDE and editors
+.idea/
+.vscode/
+*.sublime-*
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs and temp
+*.log
+logs/
+tmp/
+temp/
+.cache/
+
+# Docker
+.docker/
+
+# Cursor / project
+.cursor/

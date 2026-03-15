@@ -1,0 +1,89 @@
+# Run from repo root: docker compose up --build
+# Frontend: http://localhost:3000  Backend: http://localhost:8080
+
+services:
+  planner-agent:
+    build: { context: ., dockerfile: services/planner_agent/Dockerfile }
+    ports: ["8081:8080"]
+    environment: { GCP_PROJECT: "${GCP_PROJECT:-}" }
+
+  search-agent:
+    build: { context: ., dockerfile: services/search_agent/Dockerfile }
+    ports: ["8082:8080"]
+    environment:
+      {
+        SEARCH_API_KEY: "${SEARCH_API_KEY:-}",
+        GOOGLE_CX: "${GOOGLE_CX:-f2f9d6b4484d949fd}",
+      }
+
+  retriever-agent:
+    build: { context: ., dockerfile: services/retriever_agent/Dockerfile }
+    ports: ["8083:8080"]
+    environment:
+      {
+        GCP_PROJECT: "${GCP_PROJECT:-}",
+        GCS_BUCKET: "${GCS_BUCKET:-}",
+        VERTEX_REGION: "us-central1",
+        GOOGLE_APPLICATION_CREDENTIALS: "/.config/gcp-key.json",
+      }
+    volumes:
+      - ${GOOGLE_APPLICATION_CREDENTIALS:-/dev/null}:/.config/gcp-key.json:ro
+
+  verifier-agent:
+    build: { context: ., dockerfile: services/verifier_agent/Dockerfile }
+    ports: ["8084:8080"]
+
+  answer-agent:
+    build: { context: ., dockerfile: services/answer_agent/Dockerfile }
+    ports: ["8085:8080"]
+    environment:
+      {
+        GCP_PROJECT: "${GCP_PROJECT:-}",
+        VERTEX_REGION: "us-central1",
+        GOOGLE_APPLICATION_CREDENTIALS: "/.config/gcp-key.json",
+      }
+    volumes:
+      - ${GOOGLE_APPLICATION_CREDENTIALS:-/dev/null}:/.config/gcp-key.json:ro
+
+  reflection-agent:
+    build: { context: ., dockerfile: services/reflection_agent/Dockerfile }
+    ports: ["8086:8080"]
+    environment:
+      {
+        GCP_PROJECT: "${GCP_PROJECT:-}",
+        VERTEX_REGION: "us-central1",
+        GOOGLE_APPLICATION_CREDENTIALS: "/.config/gcp-key.json",
+      }
+    volumes:
+      - ${GOOGLE_APPLICATION_CREDENTIALS:-/dev/null}:/.config/gcp-key.json:ro
+
+  backend-api:
+    build: { context: ., dockerfile: services/backend_api/Dockerfile }
+    ports: ["8080:8080"]
+    environment:
+      PLANNER_AGENT_URL: http://planner-agent:8080
+      SEARCH_AGENT_URL: http://search-agent:8080
+      RETRIEVER_AGENT_URL: http://retriever-agent:8080
+      VERIFIER_AGENT_URL: http://verifier-agent:8080
+      ANSWER_AGENT_URL: http://answer-agent:8080
+      REFLECTION_AGENT_URL: http://reflection-agent:8080
+      GCP_PROJECT: "${GCP_PROJECT:-}"
+      BIGQUERY_DATASET: "${BIGQUERY_DATASET:-}"
+      BIGQUERY_TABLES: '["query_logs"]'
+    depends_on:
+      [
+        planner-agent,
+        search-agent,
+        retriever-agent,
+        verifier-agent,
+        answer-agent,
+        reflection-agent,
+      ]
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args: { API_URL: "http://localhost:8080" }
+    ports: ["3000:80"]
+    depends_on: [backend-api]
