@@ -57,6 +57,71 @@ flowchart TB
 
 ---
 
+## System architecture
+
+High-level system architecture (layers and components):
+
+```mermaid
+flowchart TB
+    subgraph Client["🖥️ Client"]
+        User([User])
+        Browser[Browser]
+        User --> Browser
+    end
+
+    subgraph Frontend["Frontend (Docker / Cloud Run)"]
+        Flutter[Flutter Web App]
+        Nginx[Nginx :80]
+        Flutter --> Nginx
+    end
+
+    subgraph Gateway["API Gateway"]
+        Backend[Backend API :8080]
+    end
+
+    subgraph Agents["Agent layer (microservices)"]
+        Planner[Planner Agent :8081]
+        Search[Search Agent :8082]
+        Retriever[Retriever Agent :8083]
+        Verifier[Verifier Agent :8084]
+        Answer[Answer Agent :8085]
+        Reflection[Reflection Agent :8086]
+    end
+
+    subgraph External["External services"]
+        CSE[Google Custom Search / SerpAPI]
+        Vertex[Vertex AI Gemini]
+        BQ[BigQuery]
+    end
+
+    Browser --> |HTTPS| Nginx
+    Nginx --> Flutter
+    Flutter --> |POST /query| Backend
+    Backend --> Planner
+    Backend --> Search
+    Backend --> Retriever
+    Backend --> Verifier
+    Backend --> Answer
+    Backend --> Reflection
+    Search --> CSE
+    Retriever --> Vertex
+    Answer --> Vertex
+    Reflection --> Vertex
+    Backend -.->|optional log| BQ
+```
+
+**Layers:**
+
+| Layer        | Components                                               | Role                                               |
+| ------------ | -------------------------------------------------------- | -------------------------------------------------- |
+| **Client**   | User, browser                                            | Runs the Flutter web app.                          |
+| **Frontend** | Flutter build, Nginx                                     | Serves static assets; single-page UI.              |
+| **Gateway**  | Backend API                                              | Orchestrates agents; single entrypoint.            |
+| **Agents**   | Planner, Search, Retriever, Verifier, Answer, Reflection | Stateless FastAPI services; called by the gateway. |
+| **External** | Custom Search, Vertex AI, BigQuery                       | Web search, LLM/embeddings, optional analytics.    |
+
+---
+
 ## Technologies
 
 Technologies used across the codebase:
